@@ -1,0 +1,111 @@
+html,
+body {
+	font-family: 'Roboto', sans-serif;
+	font-weight: bold;
+	letter-spacing: 0.5px;
+	box-sizing: border-box;
+	color: rgb(255, 255, 255);
+	margin: 0;
+	padding: 0;
+}
+
+p {
+	color: rgb(90, 90, 90);
+	text-align: center;
+}
+
+textarea {
+	display: block;
+	width: 960px;
+	height: 170px;
+	margin: 20px auto 20px;
+	background-color: rgb(255, 255, 255);
+	color: #333;
+	font-size: 20px;
+	padding: 15px;
+	resize: none;
+}
+
+.keyboard {
+	display: flex;
+	flex-wrap: wrap;
+	width: 970px;
+	height: 320px;
+	margin: 0 auto;
+	padding: 10px;
+	border-radius: 15px;
+	background-color: rgb(145, 145, 145);
+	user-select: none;
+}
+
+.key {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	width: 60px;
+	height: 60px;
+	margin-right: 5px;
+	background-color: #333;
+	border-radius: 10px;
+	transition: background-color 0.2s linear;
+}
+
+.keyboard div.last {
+	margin-right: 0;
+}
+
+.keyboard div.long {
+	width: 125px;
+}
+
+.keyboard div.verylong {
+	width: 385px;
+}
+
+.upper {
+	position: absolute;
+	margin-left: -15px;
+	margin-top: -12px;
+}
+
+.animation {
+	background-color: #1DE9B6;
+	animation: push 0s linear forwards;
+}
+
+.hidden {
+	display: none;
+}
+
+.key:hover {
+	background-color: #00796B;
+	transition: background-color 0.1s linear;
+}
+
+.key.animation:hover {
+	background-color: #1DE9B6;
+}
+
+.animation-end {
+	animation: delete 0.2s linear;
+}
+
+@keyframes push {
+	0% {
+		border-radius: 10px;
+	}
+	100% {
+		border-radius: 30px;
+	}
+}
+
+@keyframes delete {
+	0% {
+		border-radius: 30px;
+	}
+
+	100% {
+		border-radius: 10px;
+	}
+}
