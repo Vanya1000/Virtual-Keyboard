@@ -64,11 +64,27 @@ const KEY_CODES = [
   'ControlLeft', 'MetaLeft', 'AltLeft', 'Space', 'AltRight', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ControlRight'];
 
 const CLASSES = [
-  '', '', '', '', '', '', '', '', '', '', '', '', '', 'long last',
+  '', '', '', '', '', '', '', '', '', '', '', '', '', 'square2x last',
   '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'last',
-  'long', '', '', '', '', '', '', '', '', '', '', '', 'long last',
-  'long', '', '', '', '', '', '', '', '', '', '', '', 'long last',
-  'long', '', '', 'verylong', '', '', '', '', 'last'];
+  'square2x', '', '', '', '', '', '', '', '', '', '', '', 'square2x last',
+  'square2x', '', '', '', '', '', '', '', '', '', '', '', 'square2x last',
+  'square2x', '', '', 'long', '', '', '', '', 'last'];
+
+class Counter {
+  constructor(start = 0) {
+    this.count = start;
+  }
+
+  increment() {
+    this.count += 1;
+  }
+
+  getCount() {
+    return this.count;
+  }
+}
+
+const counter = new Counter(0);
 
 const keyboardState = {
   shift: false,
@@ -76,21 +92,27 @@ const keyboardState = {
   language: localStorage.getItem('cur_language') ? localStorage.getItem('cur_language') : 'ENG',
   selectMouse: null,
   cursorPosition: null,
+  letterInString: null,
+  indexInString: null,
+  currentPositionInString: null,
 };
 
 function generateKeyboard() {
   const BODY = document.querySelector('body');
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('wrapper');
+  BODY.appendChild(wrapper);
   const INPUT = document.createElement('textarea');
-  BODY.appendChild(INPUT);
+  wrapper.appendChild(INPUT);
   const KEYBOARD = document.createElement('div');
   KEYBOARD.classList.add('keyboard');
-  BODY.appendChild(KEYBOARD);
+  wrapper.appendChild(KEYBOARD);
+  const DESCRIPTION2 = document.createElement('p');
+  DESCRIPTION2.innerText = 'Для сохранения активным Shift  кликните на клавишу и отпустите клик не над этой клавишей';
+  wrapper.appendChild(DESCRIPTION2);
   const DESCRIPTION = document.createElement('p');
   DESCRIPTION.innerText = 'Toggle language: Left Ctrl + Left Alt. For Windows';
-  BODY.appendChild(DESCRIPTION);
-  const DESCRIPTION2 = document.createElement('p');
-  DESCRIPTION2.innerText = 'Для сохранения активным Shift кликните на клавишу и отпустите клик не над этой клавишей';
-  BODY.appendChild(DESCRIPTION2);
+  wrapper.appendChild(DESCRIPTION);
 
   for (let i = 0; i < KEY_CODES.length; i += 1) {
     const BUTTON = (`
@@ -156,42 +178,137 @@ function changeClass(whoVisible) {
   });
 }
 
+function updateCursorPosition() {
+  const INPUT = document.querySelector('textarea');
+  INPUT.selectionStart = keyboardState.cursorPosition;
+  INPUT.selectionEnd = keyboardState.cursorPosition;
+}
+
+function countletterInString() {
+  const INPUT = document.querySelector('textarea');
+  const split = (INPUT.value).split('\n').map((line) => {
+    if (line.length > 79) {
+      let { length } = line;
+      const countStr = [];
+      while (length > 79) {
+        countStr.push(79);
+        length -= 79;
+      }
+      if (length > 0) {
+        countStr.push(length);
+      }
+      return countStr;
+    }
+    return line.length;
+  });
+  const result = split.flat();
+  keyboardState.letterInString = result;
+}
+
+function getIndexInString() {
+  let countIndex = 0;
+  let countS = keyboardState.cursorPosition;
+  if (keyboardState.letterInString.length === 1) {
+    keyboardState.currentPositionInString = countS;
+  } else {
+    for (let i = 0; i < keyboardState.letterInString.length; i += 1) {
+      if (countS <= keyboardState.letterInString[i]) {
+        keyboardState.indexInString = countIndex;
+        break;
+      }
+      countS -= keyboardState.letterInString[i];
+      countIndex += 1;
+      countS -= 1;
+    }
+    keyboardState.currentPositionInString = countS;
+  }
+}
+
 function printKeyboard(dataCode) {
   const INPUT = document.querySelector('textarea');
-  console.log(keyboardState.cursorPosition);
   if (KEY_CODES.includes(dataCode)) {
+    INPUT.blur();
+    INPUT.focus();
+    updateCursorPosition();
     switch (dataCode) {
       case 'Backspace':
         if (keyboardState.cursorPosition > 0) {
           INPUT.value = (INPUT.value).split('').filter((char, index) => index !== keyboardState.cursorPosition - 1).join('');
           keyboardState.cursorPosition -= 1;
-          INPUT.selectionStart = keyboardState.cursorPosition;
-          INPUT.selectionEnd = keyboardState.cursorPosition;
+          updateCursorPosition();
         }
         break;
       case 'Delete': {
         INPUT.value = (INPUT.value).split('').filter((char, index) => index !== keyboardState.cursorPosition).join('');
-        INPUT.selectionStart = keyboardState.cursorPosition;
-        INPUT.selectionEnd = keyboardState.cursorPosition;
+        updateCursorPosition();
         break;
       }
       case 'Tab':
         INPUT.value = `${INPUT.value.slice(0, keyboardState.cursorPosition)}    ${INPUT.value.slice(keyboardState.cursorPosition)}`;
         keyboardState.cursorPosition += 4;
-        INPUT.selectionStart = keyboardState.cursorPosition;
-        INPUT.selectionEnd = keyboardState.cursorPosition;
+        updateCursorPosition();
         break;
       case 'Enter':
         INPUT.value = `${INPUT.value.slice(0, keyboardState.cursorPosition)}\n${INPUT.value.slice(keyboardState.cursorPosition)}`;
         keyboardState.cursorPosition += 1;
-        INPUT.selectionStart = keyboardState.cursorPosition;
-        INPUT.selectionEnd = keyboardState.cursorPosition;
+        updateCursorPosition();
         break;
       case 'Space':
         INPUT.value = `${INPUT.value.slice(0, keyboardState.cursorPosition)} ${INPUT.value.slice(keyboardState.cursorPosition)}`;
         keyboardState.cursorPosition += 1;
-        INPUT.selectionStart = keyboardState.cursorPosition;
-        INPUT.selectionEnd = keyboardState.cursorPosition;
+        updateCursorPosition();
+        break;
+      case 'ArrowLeft':
+        if (keyboardState.cursorPosition > 0) {
+          keyboardState.cursorPosition -= 1;
+          updateCursorPosition();
+        }
+        break;
+      case 'ArrowRight':
+        if (keyboardState.cursorPosition < INPUT.value.length) {
+          keyboardState.cursorPosition += 1;
+          updateCursorPosition();
+        }
+        break;
+      case 'ArrowUp':
+        countletterInString();
+        getIndexInString();
+        if (keyboardState.letterInString[keyboardState.indexInString - 1] !== undefined) {
+          const countLetterLeft = keyboardState.currentPositionInString;
+          const needRight = keyboardState.letterInString[keyboardState.indexInString - 1]
+          - countLetterLeft + 1;
+          if (keyboardState.letterInString[keyboardState.indexInString - 1] >= countLetterLeft) {
+            keyboardState.cursorPosition -= (needRight + countLetterLeft);
+            updateCursorPosition();
+          } else {
+            keyboardState.cursorPosition -= countLetterLeft + 1;
+            updateCursorPosition();
+          }
+        } else {
+          keyboardState.cursorPosition = 0;
+          updateCursorPosition();
+        }
+        break;
+      case 'ArrowDown':
+        countletterInString();
+        getIndexInString();
+        if (keyboardState.letterInString[keyboardState.indexInString + 1] !== undefined) {
+          const countLetterRight = keyboardState.letterInString[keyboardState.indexInString]
+          - keyboardState.currentPositionInString;
+          const needLeft = keyboardState.letterInString[keyboardState.indexInString]
+          - countLetterRight + 1;
+          if (keyboardState.letterInString[keyboardState.indexInString + 1] >= needLeft) {
+            keyboardState.cursorPosition += needLeft + countLetterRight;
+            updateCursorPosition();
+          } else {
+            keyboardState.cursorPosition += keyboardState.letterInString[keyboardState.indexInString
+              + 1] + countLetterRight + 1;
+            updateCursorPosition();
+          }
+        } else {
+          keyboardState.cursorPosition = INPUT.value.length;
+          updateCursorPosition();
+        }
         break;
       case 'ShiftLeft':
         break;
@@ -214,7 +331,16 @@ function printKeyboard(dataCode) {
         keyboardState.cursorPosition += 1;
         INPUT.selectionStart = keyboardState.cursorPosition;
         INPUT.selectionEnd = keyboardState.cursorPosition;
+        if (INPUT.value.length % 78 === 0) {
+          INPUT.value = `${INPUT.value.slice(0, keyboardState.cursorPosition)}\n${INPUT.value.slice(keyboardState.cursorPosition)}`;
+          keyboardState.cursorPosition += 1;
+          INPUT.selectionStart = keyboardState.cursorPosition;
+          INPUT.selectionEnd = keyboardState.cursorPosition;
+        }
     }
+    countletterInString();
+    getIndexInString();
+    counter.increment();
   }
 }
 
@@ -251,13 +377,13 @@ function onKeyDown(event) {
   if (event.code !== 'CapsLock' && KEY_CODES.includes(event.code)) {
     printKeyboard(event.code);
     if (!repeat) {
-      // todo: при правом alt  выбирается ctrl
       addAnimationClass(document.querySelector(`[data-code="${event.code}"]`));
     }
   }
 }
 
 function onKeyUp(event) {
+  event.preventDefault();
   if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
     if (keyboardState.capsLock === false) {
       changeClass('.base');
@@ -338,9 +464,7 @@ function onMouseUp(event) {
 
 function onClick(event) {
   if (event.target.closest('.key')) {
-    if (!document.querySelector('textarea').onfocus) {
-      document.querySelector('textarea').focus();
-    }
+    document.querySelector('textarea').focus();
   }
 }
 
